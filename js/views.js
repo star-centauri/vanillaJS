@@ -7,6 +7,18 @@ export class AppView {
     }
 
     createItemsMenu(item) {
+        let li = $('li'),
+            link = $('a'),
+            title = $('span'),
+            arrow = $('span');
+
+        li.className = "nav-item nav-main";
+        link.className = "nav-link nav-toggle";
+        title.className = "title";
+        arrow.className = "arrow";
+
+
+
         return $(`<li class="nav-item nav-main">
                     <a href="javascript:;" class="nav-link nav-toggle" id="principal">
                         ${m$.icon(item.icon)}

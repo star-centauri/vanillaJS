@@ -1,5 +1,7 @@
 export class MiniElement {
     static icon(glyphiconClass) {
-        return `<i class="${glyphiconClass}"></i>`;
+        let icon = document.createElement('i');
+        icon.className = glyphiconClass;
+        return icon;
     }
 }
