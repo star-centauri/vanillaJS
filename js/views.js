@@ -1,45 +1,98 @@
-import {MiniElement as m$} from './components.js'
+import {MiniElement as m$, 
+        Modal, 
+        floatingLabel, 
+        Button, 
+        Metronic as mt$} from './components.js'
 
 export class AppView {
     constructor() {
-        let $ = document.createElement.bind(document);
-        this._menu = document.getElementById("boardSelector");
+        this._menu = $("#boardSelector");
+        this._userLogon = $(".dropdown-user");
     }
 
+    showModal(title, content, footer, options) {
+        new Modal(
+            title,
+            content,
+            footer,
+            options)
+            .show();
+    }
+
+    // BEGIN - Layout e estilização exclusivas do Menu //
     createItemsMenu(item) {
-        let li = $('li'),
-            link = $('a'),
-            title = $('span'),
-            arrow = $('span');
-
-        li.className = "nav-item nav-main";
-        link.className = "nav-link nav-toggle";
-        title.className = "title";
-        arrow.className = "arrow";
-
-
-
         return $(`<li class="nav-item nav-main">
                     <a href="javascript:;" class="nav-link nav-toggle" id="principal">
                         ${m$.icon(item.icon)}
                         <span class="title">${item.title}</span>
                         <span class="arrow"></span>
                     </a>
-                    ${item.subItems.length ? `<ul class="sub-menu" style="display: none;"></ul>` : ''}
-                </li>`)[0];
+                    <ul class="sub-menu" style="display: none;"></ul>
+                </li>`);
     }
 
     createSubItemsMenu(subItems) {
-        return $(subItems.map(item => 
-            `<li class="nav-item start">
-                <a href="#" class="nav-link" id="${item.id}">
-                    ${m$.icon(item.icon)}
-                    <span class="title">${item.title}</span>
-                </a>
-            </li>`).join(' '))[0];
+        return subItems.map(item => 
+                `<li class="nav-item start">
+                    <a href="#" class="nav-link" id="${item.id}">
+                        ${m$.icon(item.icon)}
+                        <span class="title">${item.title}</span>
+                    </a>
+                </li>`).join(' ');
     }
 
     appendItemsMenu(layoutItems) {
-        this._menu.appendChild($(layoutItems)[0]);
+        this._menu.append(layoutItems);
+    }
+
+    itemMenuActive(itemId) {
+        let item = this._menu.find('#'+itemId);
+        item.closest('li').addClass('active open');
+        item.closest('.nav-main').addClass('active open');
+    }
+
+    itemsMenuDeactive() {
+        let items = this._menu.find('li > ul li a');
+        items.closest('li').removeClass('active open');
+        items.closest('.nav-main').removeClass('active open');
+    }
+
+    get menuItems() {
+        return this._menu.find('li > ul li a');
+    }
+    // END //
+
+    formChangePassword() {
+        let container = $('<div class="text-center">');
+        function createInput(title, id) {
+            let element = new floatingLabel(title).getHtml();
+            element.find('input').attr('type', 'password');
+            element.find('input').attr('id', id);
+            return element;
+        };
+        function adicionarBotaoConfirmacao() {
+            var btn = new Button("Confirmar");
+            btn.addClass([mt$.Button.btn, mt$.Button.bgDanger].join(' '));
+            return btn.getHtml();
+        };
+        
+        container.append(createInput("Senha Atual:", 'oldPassword'));
+        container.append(createInput("Nova Senha:", 'newPassword'));
+        container.append(createInput("Confimar Nova Senha:", 'confirmPassword'));
+        container.append(adicionarBotaoConfirmacao());
+
+        return container;
+    }
+
+    appendNameUser(user) {
+        this._userLogon.find('#userLogin').append(user);
+    }
+
+    get changePassword() {
+        return this._userLogon.find('#changePassword');
+    }
+
+    get logOut() {
+        return this._userLogon.find('#logOut');
     }
 }

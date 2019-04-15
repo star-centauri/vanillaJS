@@ -18,3 +18,21 @@ export class Models {
         }
     }
 }
+
+export class UserLogon {
+    constructor(oldPassword, newPassword, confirmNewPassword) {
+        this._oldPassword = oldPassword;
+        this._newPassword = newPassword;
+        this._confirmNewPassord = confirmNewPassword;       
+        
+        Object.freeze(this);
+    }
+
+    get getData() {
+        return {
+            oldPassword: this._oldPassword,
+            newPassword: this._newPassword,
+            confirmPassword: this._confirmNewPassord
+        }
+    }
+}
