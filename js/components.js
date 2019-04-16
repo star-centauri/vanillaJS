@@ -320,3 +320,71 @@ export class floatingLabel extends Element {
         this.input.val(value);
     }
 }
+
+export class Alert extends Element {
+    constructor() {
+        super('<div class="alert" role="alert">');
+
+        this._message = undefined;
+        this._onRemove = undefined;
+        this._typeAlert = undefined;
+    }
+
+    _onChangeRemove() {
+        container.remove();
+        if(this._onRemove)
+            this._onRemove();
+    }
+
+    _showMessage(elementMgs, timeout) {
+        $('body').append(elementMgs.addClass("app-messages"));
+        setTimeout(function () { elementMgs.remove(); }, timeout || 2000);
+    }
+
+    create() {
+        let container = this.htmlTemplate;
+        let btnClose = $('<button type="button" class="close"><span aria-hidden="true">&times;</span></button>');
+
+        btnClose.click(this._onChangeRemove.bind(this));
+
+        if(this._typeAlert)
+            container.addClass(this._typeAlert);
+        
+        container.append(btn);
+        container.append(this._message);
+
+        return container;
+    }
+
+    showDefault(message, onRemove) {
+        this._message = message;
+        this._onRemove = onRemove;
+
+        return this.create();
+    }
+
+    showError(message, onRemove) {
+        this._message = message;
+        this._onRemove = onRemove;
+        this._typeAlert = "alert-danger";
+
+        this._showMessage(this.create(), 6000);
+    }
+
+    showWarning(message, onRemove) {
+        this._message = message;
+        this._onRemove = onRemove;
+        this._typeAlert = "alert-warning";
+
+        return this._showMessage(this.create(), 8000);
+    }
+
+    showSuccess(message, onRemove) {
+        this._message = message;
+        this._onRemove = onRemove;
+        this._typeAlert = "alert-success";
+
+        return this._showMessage(this.create(), 3000);
+    }
+
+}

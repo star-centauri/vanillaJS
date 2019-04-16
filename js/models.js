@@ -1,5 +1,5 @@
 export class Models {
-    Request(options = {}) {
+    Request(options) {
         return {
             method: options.method || function () { throw new Error('method is undefined') },
             headers: {

@@ -27,6 +27,10 @@ class Controller {
         this._views.showModal("Mudar Senha", body, '', {size: "modal-medium", css: false});
     }
 
+    _logOff() {
+        this._user.tryLogOut();
+    }
+
     showMenu(items, itemDefault) {
         let length = items.length,
             menuView = this._views;
@@ -58,10 +62,7 @@ class Controller {
         userView.appendNameUser(user);
 
         userView.changePassword.click(this._alterPasswordUser.bind(this)); 
-
-        userView.logOut.click(function() {
-            console.log("ok2");
-        })
+        userView.logOut.click(this._logOff.bind(this));
     }
 }
 
