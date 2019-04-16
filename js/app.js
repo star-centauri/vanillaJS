@@ -1,4 +1,4 @@
-import {HttpService} from './services.js';
+import {HttpService, User} from './services.js';
 import {Models, UserLogon} from './models.js';
 import {AppView} from './views.js';
 
@@ -6,6 +6,25 @@ class Controller {
     constructor() {
         this._views = new AppView();
         this._model = new Models();
+        this._user = new User();
+    }
+
+    _alterPasswordUser() {
+        let body = this._views.formChangePassword(),
+            service = this._user;
+
+        function alterPass() {
+            let model = new UserLogon(
+                body.find('#oldPassword').val(),
+                body.find('#newPassword').val(),
+                body.find('#confirmPassword').val()
+            );
+            
+            service.tryChangePassword(model.getData, () => $('.modal').modal('hide'));
+        }
+
+        body.find('button').click(alterPass);
+        this._views.showModal("Mudar Senha", body, '', {size: "modal-medium", css: false});
     }
 
     showMenu(items, itemDefault) {
@@ -38,10 +57,7 @@ class Controller {
 
         userView.appendNameUser(user);
 
-        userView.changePassword.click(function() {
-            let body = userView.formChangePassword();
-            userView.showModal("Mudar Senha", body, '', {size: "modal-medium", css: false});
-        }); 
+        userView.changePassword.click(this._alterPasswordUser.bind(this)); 
 
         userView.logOut.click(function() {
             console.log("ok2");
