@@ -13,12 +13,21 @@ export class HttpService {
 		return response; 
     }
 
+    _requestSuccess(data) {
+        if(data.success){
+            return data;
+        }
+    
+        throw data.responseData;
+    }
+
     Sender(url, options = {}) {
-        console.log(options);
         let request = this._model.Request(options);
+
         return fetch(url, request)
                 .then(response => this._handleErrors(response))
                 .then(response => response.json())
+                .then(data => this._requestSuccess(data))
                 .then(data => data.responseData);
     }
 }
@@ -26,7 +35,6 @@ export class HttpService {
 export class User extends HttpService {
     constructor() {
         super();
-        this._alert = new Alert();
     }
 
     _reload() {
@@ -38,7 +46,7 @@ export class User extends HttpService {
         .then(usuario => onSuccess(usuario))
         .catch(err => { 
             console.log(err);
-            this._alert.showError(err.Message); 
+            new Alert(err.Message).showError(); 
         });
     }
 
@@ -51,12 +59,12 @@ export class User extends HttpService {
 
         this.Sender('User/ChangePassword', {method: 'POST', sendData: model})
         .then(msg => {
-            this._alert.showSuccess(msg);
+            new Alert(msg).showSuccess();
             onSuccess();
         })
         .catch(err => { 
             console.log(err);
-            this._alert.showError(err.Message);
+            new Alert(err.Data.join(' <br> ')).showError();
         });
     }
 
@@ -65,7 +73,7 @@ export class User extends HttpService {
         .then(() => this._reload())
         .catch(err => { 
             console.log(err);
-            this._alert.showError(err.Message); 
+            new Alert(err.Message).showError(); 
         });
     }
 
@@ -73,8 +81,7 @@ export class User extends HttpService {
         let expiration = response.indexOf("logOn_form") > -1 ? true : false;
 
         if(expiration) {
-            this._alert.showError("Sua sessão expirou.");
-        
+            new Alert("Sua sessão expirou.").showError(); 
             setTimeout(function() {
                 this._reload();
             }, 1000);

@@ -81,7 +81,10 @@ class AppPriceTrack {
             this._controller.showMenu(modules.menu.MenuItems.map(items => this._model.MenuItems(items)), modules.menu.Default);
             this._controller.showUser(modules.userLogged);
         })
-        .catch(err => { console.log(err) });
+        .catch(err => { 
+            console.log(err);
+            new Alert(err.Message).showError();  
+        });
     }
 }
 

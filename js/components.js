@@ -322,16 +322,17 @@ export class floatingLabel extends Element {
 }
 
 export class Alert extends Element {
-    constructor() {
+    constructor(msg, onRemove) {
         super('<div class="alert" role="alert">');
 
-        this._message = undefined;
-        this._onRemove = undefined;
+        this._message = msg;
+        this._onRemove = onRemove;
         this._typeAlert = undefined;
+        this._container = this.htmlTemplate;
     }
 
     _onChangeRemove() {
-        container.remove();
+        this._container.remove();
         if(this._onRemove)
             this._onRemove();
     }
@@ -342,48 +343,35 @@ export class Alert extends Element {
     }
 
     create() {
-        let container = this.htmlTemplate;
         let btnClose = $('<button type="button" class="close"><span aria-hidden="true">&times;</span></button>');
 
         btnClose.click(this._onChangeRemove.bind(this));
 
         if(this._typeAlert)
-            container.addClass(this._typeAlert);
+            this._container.addClass(this._typeAlert);
         
-        container.append(btn);
-        container.append(this._message);
+        this._container.append(btnClose);
+        this._container.append(this._message);
 
-        return container;
+        return this._container;
     }
 
-    showDefault(message, onRemove) {
-        this._message = message;
-        this._onRemove = onRemove;
-
+    showDefault() {
         return this.create();
     }
 
-    showError(message, onRemove) {
-        this._message = message;
-        this._onRemove = onRemove;
+    showError() {
         this._typeAlert = "alert-danger";
-
         this._showMessage(this.create(), 6000);
     }
 
-    showWarning(message, onRemove) {
-        this._message = message;
-        this._onRemove = onRemove;
+    showWarning() {
         this._typeAlert = "alert-warning";
-
         return this._showMessage(this.create(), 8000);
     }
 
-    showSuccess(message, onRemove) {
-        this._message = message;
-        this._onRemove = onRemove;
+    showSuccess() {
         this._typeAlert = "alert-success";
-
         return this._showMessage(this.create(), 3000);
     }
 
