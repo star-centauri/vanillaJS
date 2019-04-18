@@ -1,20 +1,30 @@
-export class Models {
-    Request(options) {
-        return {
-            method: options.method || function () { throw new Error('method is undefined') },
-            headers: {
-                "Content-Type": options.contentType || "application/json",
-            },
-            body: options.sendData
-        }
-    }
-
-    MenuItems(item) {
+export class MenuModel {
+    ItemMenu(item) {
         return {
             id: item.Id,
-            title: item.Name,
             icon: item.Icon,
+            title: item.Name,
             subItems: item.SubItems
+        }
+    }
+}
+
+export class Request {
+    constructor(options) {
+        this._method = options.method || function () { throw new Error('method is undefined') };
+        this._headers = {
+            "Content-Type": options.contentType || "application/json",
+        };
+        this._body = options.sendData;
+
+        Object.freeze(this);
+    }
+
+    get getData() {
+        return {
+            method: this._method,
+            headers: this._headers,
+            body: this._body
         }
     }
 }

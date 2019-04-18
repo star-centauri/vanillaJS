@@ -1,12 +1,8 @@
-import {Models} from './models.js';
+import {Request} from './models.js';
 import {Helpers as h$} from './helpers.js';
 import {Alert} from './components.js';
 
 export class HttpService {
-    constructor() {
-        this._model = new Models(); 
-    }
-
     _handleErrors(response) {
 		if(!response.ok)
 			throw new Error(response.statusText);
@@ -22,9 +18,9 @@ export class HttpService {
     }
 
     Sender(url, options = {}) {
-        let request = this._model.Request(options);
+        let _request = new Request(options);
 
-        return fetch(url, request)
+        return fetch(url, _request.getData)
                 .then(response => this._handleErrors(response))
                 .then(response => response.json())
                 .then(data => this._requestSuccess(data))

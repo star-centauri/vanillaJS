@@ -96,3 +96,41 @@ export class AppView {
         return this._userLogon.find('#logOut');
     }
 }
+
+export class FactoryBoard {
+    constructor(options) {
+        this._board = options;
+    }
+
+    get load() {
+        switch (this._board) {
+            case "Pesquisadores":
+                return this.createPesquisador(options);
+            case "Ciclos":
+                return this.createCiclo(options);
+            case "Suporte":
+                return this.createSuporte(options);
+            case "Desenvolvimento":
+                return this.createDesenvolvimento(options);
+            case "Infra":
+                return this.createInfraestrutura(options);
+            case "BR":
+                return this.createClienteBR(options);
+            case "Raizen":
+                return this.createClienteRaizen(options);
+            case "Ipiranga":
+                return this.createClienteBR(options);
+            case "Operacao":
+                return this.createOperacao(options);
+            case "Gerencial":
+                return this.createGerencial(options);  
+            case "Pedidos":
+                return this.createPedidos(options);
+            case "Cronograma":
+                return this.createCronograma(options);
+            default:
+                console.log("O Board inicial não foi definido");
+                break;
+        }
+    }
+}

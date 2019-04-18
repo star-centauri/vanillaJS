@@ -1,11 +1,11 @@
 import {HttpService, User} from './services.js';
-import {Models, UserLogon} from './models.js';
+import {MenuModel, UserLogon} from './models.js';
 import {AppView} from './views.js';
 
 class Controller {
     constructor() {
         this._views = new AppView();
-        this._model = new Models();
+        this._model = new MenuModel();
         this._user = new User();
     }
 
@@ -31,29 +31,23 @@ class Controller {
         this._user.tryLogOut();
     }
 
-    showMenu(items, itemDefault) {
-        let length = items.length,
-            menuView = this._views;
+    _loadBoard(boardId) {
+        console.log(boardId);
+    }
+
+    showMenu(items) {
+        let length = items.length;
 
         for(let i = 0; i < length; i++) {
             let layoutItem = this._views.createItemsMenu(items[i]); 
             
             if(items[i].subItems.length) {
-                let model = items[i].subItems.map(subItem => this._model.MenuItems(subItem));
+                let model = items[i].subItems.map(subItem => this._model.ItemMenu(subItem));
                 layoutItem.find('ul').append(this._views.createSubItemsMenu(model));
             }
 
             this._views.appendItemsMenu(layoutItem);
         }
-
-        this._views.menuItems.on('click', function() {
-            let boardId = $(this).attr('id');
-            console.log(boardId);
-            menuView.itemsMenuDeactive();
-            menuView.itemMenuActive(boardId);
-        });
-
-        menuView.itemMenuActive(itemDefault.Id);
     }
 
     showUser(user) {
@@ -64,23 +58,41 @@ class Controller {
         userView.changePassword.click(this._alterPasswordUser.bind(this)); 
         userView.logOut.click(this._logOff.bind(this));
     }
+
+    showBoards(boardDefault) {
+        let menuView = this._views,
+            loadBoard = this._loadBoard;
+
+        menuView.menuItems.on('click', function() {
+            let boardId = $(this).attr('id'); 
+            loadBoard(boardId);
+            menuView.itemsMenuDeactive();
+            menuView.itemMenuActive(boardId);
+        });
+
+        this._views.itemMenuActive(boardDefault.Id);
+        loadBoard(boardDefault.Id);
+    }
 }
 
 class AppPriceTrack {
     constructor() {
         this._controller = new Controller();
         this._http = new HttpService();
-        this._model = new Models();
+        this._model = new MenuModel();
 
         this._inicialization();
     }
 
+    _load(data) {
+        this._controller.showMenu(data.menu.MenuItems.map(items => this._model.ItemMenu(items)));
+        this._controller.showUser(data.userLogged);
+        this._controller.showBoards(data.menu.Default);
+    }
+
     _inicialization() {
-        this._http.Sender('App/Load', {method: 'GET'})
-        .then(modules => {
-            this._controller.showMenu(modules.menu.MenuItems.map(items => this._model.MenuItems(items)), modules.menu.Default);
-            this._controller.showUser(modules.userLogged);
-        })
+        this._http.Sender('App/Load', { method: 'GET' })
+        .then(modules => this._load(modules))
         .catch(err => { 
             console.log(err);
             new Alert(err.Message).showError();  
