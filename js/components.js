@@ -52,6 +52,133 @@ class Element {
     }
 }
 
+export class createBoard {
+    constructor(options) {
+        this._showContentOnLoad = options.showOnLoad || false;
+        this._context = options.context || this.notifyError('context is not defined');
+        this._title = options.title || "";
+        this._toolbarItems = options.toolbarItems || [];
+        this._advancedFilter = options.advancedFilter || [];
+        this._searchCommand = options.command;
+        this._filterModel = options.filter;
+        this._useAdvancedFilter = options.useAdvancedFilter || false;
+        this._useFilter = options.useFilter || false;
+        this._useRefresh = options.useRefresh || false;
+        
+        Object.freeze(this);
+        this.instance();
+    }
+    
+    instance() {
+        let _model = undefined,
+            _command = undefined,
+            _self = this;
+        
+        let create = function() {
+            _command = getSearchCommand(_self._searchCommand);
+            
+            if(_self._useFilter) {
+                _model = new m$.Filter().extends(doSearch, _self._filterModel);
+            } 
+            
+            if (_self._useRefresh) {
+                addButtonRefresh();
+            }
+            
+            if(_self._showContentOnLoad){
+                doSearch();
+            } 
+        }();
+        
+        function doSearch(filter) {
+            _command.execute(filter);
+        }
+        
+        function getSearchCommand(options) {
+
+            let Command = function () {
+
+                var onSuccess = function (data) {
+                    showContent(data, options.onSuccess)
+                }
+
+                return {
+                    execute: function (filter) {
+                        clear();
+                        App.Service.tryExecute(options.command,
+                             filter,
+                             onSuccess,
+                             options.onError
+                        )
+                    }
+                }
+            }
+
+            return new Command(options);
+        }
+        
+        function showContent(data, userCallback) {
+            if (userCallback !== undefined) {
+                userCallback(data);
+            }
+        }
+        
+        function clear() {
+            getContent().empty();
+        }
+        
+        function refresh() {
+            if(_model) {
+                _model.apply();
+            } else{
+                doSearch();
+            }
+        }
+        
+        function getContent() {
+            return _self._context;
+        }
+        
+        function addButtonRefresh() {
+            var btnRefresh = new E$.refreshButton(refresh);
+            addToolbarItem(btnRefresh);
+        }
+        
+        function addToolbarItem(item) {
+            _self._toolbarItems.push(item);
+        }
+    }
+    
+    notifyError(message){
+        throw message;  
+    } 
+    
+    addContent(element) {
+        this._context.empty();
+        this._context.append(element);
+    }
+    
+    get Title() {
+        return this._title;
+    }
+    
+    get getToolbar() {
+        return this._toolbarItems;
+    }
+    
+    get useToolbar() {
+        return this._toolbarItems.length > 0;
+    }
+    
+    get useAdvancedFilter() {
+        return this._useAdvancedFilter;
+    } 
+    
+    get getAdvancedFilter() {
+        return this._advancedFilter;
+    }    
+}
+
 export class Metronic {
     static get BackGround() {
         return{

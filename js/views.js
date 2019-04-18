@@ -2,7 +2,8 @@ import {MiniElement as m$,
         Modal, 
         floatingLabel, 
         Button, 
-        Metronic as mt$} from './components.js'
+        Metronic as mt$} from './components.js';
+import {FactoryPattern} from './boards.js'
 
 export class AppView {
     constructor() {
@@ -19,7 +20,7 @@ export class AppView {
             .show();
     }
 
-    // BEGIN - Layout e estilização exclusivas do Menu //
+    //#region MENU BOARDS
     createItemsMenu(item) {
         return $(`<li class="nav-item nav-main">
                     <a href="javascript:;" class="nav-link nav-toggle" id="principal">
@@ -60,8 +61,9 @@ export class AppView {
     get menuItems() {
         return this._menu.find('li > ul li a');
     }
-    // END //
+    //#endregion
 
+    //#region MENU USER
     formChangePassword() {
         let container = $('<div class="text-center">');
         function createInput(title, id) {
@@ -95,42 +97,52 @@ export class AppView {
     get logOut() {
         return this._userLogon.find('#logOut');
     }
+    //#endregion
+}
+
+export class Board {
+    constructor() {
+        this._layout = $('<section>');
+        this._filterSelection = $("#filterSelection");
+        this._content = $('<article id="content" class="col-md-12">');
+    }
+
+    _toolbar(items, hasFilter) {
+        let length = items.length,
+            toolbar = $(`<div id="pageToolbar" class="${hasFilter ? 'display-page-toolbar custom-tollbar' : 'display-page-toolbar'}">`);
+
+        for (var i = 0; i < length; i++) {
+            toolbar.append(items[i]);
+        }
+        return toolbar;
+    }
+
+    _build(model) {
+        let header = $('<div class="header-content">');
+        header.append(`<ul class="page-breadcrumb">${model.Title}</ul>`);
+
+        if(model.useAdvancedFilter)
+            this._filterSelection.append(model.getAdvancedFilter);          
+        
+        if (model.useToolbar) 
+            header.append(this._toolbar(model.getToolbar, model.useAdvancedFilter));
+        
+        this._layout.append(header);
+    }
+
+    get Context() {
+        return this._content;
+    }
+
+    addContent(model) {
+        build(model);
+        this._layout.append(this._content);                            
+    }
 }
 
 export class FactoryBoard {
-    constructor(options) {
-        this._board = options;
-    }
-
-    get load() {
-        switch (this._board) {
-            case "Pesquisadores":
-                return this.createPesquisador(options);
-            case "Ciclos":
-                return this.createCiclo(options);
-            case "Suporte":
-                return this.createSuporte(options);
-            case "Desenvolvimento":
-                return this.createDesenvolvimento(options);
-            case "Infra":
-                return this.createInfraestrutura(options);
-            case "BR":
-                return this.createClienteBR(options);
-            case "Raizen":
-                return this.createClienteRaizen(options);
-            case "Ipiranga":
-                return this.createClienteBR(options);
-            case "Operacao":
-                return this.createOperacao(options);
-            case "Gerencial":
-                return this.createGerencial(options);  
-            case "Pedidos":
-                return this.createPedidos(options);
-            case "Cronograma":
-                return this.createCronograma(options);
-            default:
-                console.log("O Board inicial não foi definido");
-                break;
-        }
+    get load(options) {
+        let factoryBoard = new FactoryPattern(options);
+        return factoryBoard.load();
     }
 }

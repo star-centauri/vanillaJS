@@ -1,12 +1,13 @@
 import {HttpService, User} from './services.js';
 import {MenuModel, UserLogon} from './models.js';
-import {AppView} from './views.js';
+import {AppView, Board, FactoryBoard} from './views.js';
 
 class Controller {
     constructor() {
         this._views = new AppView();
         this._model = new MenuModel();
         this._user = new User();
+        this._factory = new FactoryBoard();
     }
 
     _alterPasswordUser() {
@@ -32,7 +33,13 @@ class Controller {
     }
 
     _loadBoard(boardId) {
-        console.log(boardId);
+        let _board = new Board(),
+            _model = {
+                name: boardId,
+                ontext: _board.Context
+            };
+            
+        _board.addContent(this._factory.load(_model));
     }
 
     showMenu(items) {
