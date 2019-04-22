@@ -1,3 +1,5 @@
+import {refreshButton} from './components.js';
+
 export class MenuModel {
     ItemMenu(item) {
         return {
@@ -45,4 +47,63 @@ export class UserLogon {
             confirmPassword: this._confirmNewPassord
         }
     }
+}
+
+export class Board {
+    constructor(title, context, useRefresh, 
+                command, showLoad, toolbarItems, 
+                advancedFilter, proxy) {
+        this._validation(title, context);
+        this._title = title;
+        this._context = context;
+        this._useRefresh = useRefresh;
+        this._useFilter = useFilter;
+        this._searchCommand = command;
+        this._showBoardLoad = showLoad;
+        this._toolbarItems = toolbarItems || [];
+        this._advancedFilter = advancedFilter;
+        
+        this._proxy = proxy;//new ProxyFactory();
+        this._create();
+    }
+
+    _validation(title, context) {
+        if(!title || !context)
+            throw new Error("Propriedades title e/ou context vazias.");
+    }
+
+    _addButtonRefresh() {
+        this._toolbarItems.push(new refreshButton(this._searchCommand));
+    }
+
+    _create() {
+        if(_self._showBoardLoad)
+            this._searchCommand();
+        
+        if(this._useFilter)
+            this._proxy.register('Model', this._searchCommand);
+
+        if(this._useRefresh)
+            this._addButtonRefresh();
+    }
+
+    get Title() {
+        return this._title;
+    }
+    
+    get getToolbar() {
+        return this._toolbarItems;
+    }
+    
+    get useToolbar() {
+        return this._toolbarItems.length > 0;
+    }
+    
+    get useAdvancedFilter() {
+        return this._advancedFilter.length > 0;
+    } 
+    
+    get getAdvancedFilter() {
+        return this._advancedFilter;
+    }    
 }

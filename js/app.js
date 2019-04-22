@@ -1,13 +1,13 @@
 import {HttpService, User} from './services.js';
 import {MenuModel, UserLogon} from './models.js';
 import {AppView, Board, FactoryBoard} from './views.js';
+import {Alert} from './components.js';
 
 class Controller {
     constructor() {
         this._views = new AppView();
         this._model = new MenuModel();
         this._user = new User();
-        this._factory = new FactoryBoard();
     }
 
     _alterPasswordUser() {
@@ -34,12 +34,14 @@ class Controller {
 
     _loadBoard(boardId) {
         let _board = new Board(),
+            _factory = new FactoryBoard(),
             _model = {
                 name: boardId,
-                ontext: _board.Context
+                context: _board.Context
             };
-            
-        _board.addContent(this._factory.load(_model));
+        console.log(_model);
+        _factory.setOptionsFactory(_model);
+        _board.addContent(_factory.load);
     }
 
     showMenu(items) {

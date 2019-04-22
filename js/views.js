@@ -3,7 +3,7 @@ import {MiniElement as m$,
         floatingLabel, 
         Button, 
         Metronic as mt$} from './components.js';
-import {FactoryPattern} from './boards.js'
+import {FactoryPattern} from './app/boards.js';
 
 export class AppView {
     constructor() {
@@ -135,14 +135,21 @@ export class Board {
     }
 
     addContent(model) {
-        build(model);
+        this._build(model);
         this._layout.append(this._content);                            
     }
 }
 
 export class FactoryBoard {
-    get load(options) {
-        let factoryBoard = new FactoryPattern(options);
-        return factoryBoard.load();
+    constructor() {
+        this._factoryBoard = undefined;
+    }
+
+    setOptionsFactory(options) {
+        this._factoryBoard = new FactoryPattern(options);
+    }
+
+    get load() {
+        return this._factoryBoard.load;
     }
 }
