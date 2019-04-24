@@ -52,6 +52,39 @@ class Element {
     }
 }
 
+class layout {
+    constructor(element) {
+        if (element == undefined) {
+            throw new Error("element undefined");
+        }
+        this._container = $(element);
+    }
+
+    getHtml() {
+        return this._container;
+    }
+
+    append(element) {
+        this._container.append(element);
+    }
+
+    addClass(style) {
+        this._container.addClass(style);
+    }
+
+    removeClass(style) {
+        this._container.removeClass(style);
+    }
+
+    attr(atributeName, atributeValue) {
+        this._container.attr(atributeName, atributeValue);
+    }
+
+    find(son) {
+        return this._container.find(son);
+    }
+}
+
 export class Metronic {
     static get BackGround() {
         return{
@@ -375,6 +408,20 @@ export class Alert extends Element {
         return this._showMessage(this.create(), 3000);
     }
 
+}
+
+export class GridLayout extends layout {
+    constructor() {
+        super('<div class="row">');
+    }
+
+    addColunm(size, element) {
+        let colunm = $('<div>');
+
+        colunm.addClass(`col-md-${size}`);
+        colunm.append(element);
+        super.append(colunm);
+    }
 }
 
 export class refreshButton extends Button {

@@ -8,6 +8,8 @@ class Controller {
         this._views = new AppView();
         this._model = new MenuModel();
         this._user = new User();
+        this._board = new Board();
+        this._factory = new FactoryBoard();
     }
 
     _alterPasswordUser() {
@@ -33,15 +35,15 @@ class Controller {
     }
 
     _loadBoard(boardId) {
-        let _board = new Board(),
-            _factory = new FactoryBoard(),
-            _model = {
-                name: boardId,
-                context: _board.Context
-            };
-        console.log(_model);
-        _factory.setOptionsFactory(_model);
-        _board.addContent(_factory.load);
+        this._board.clear();
+
+        this._factory.setOptionsFactory({
+            name: boardId,
+            context: this._board.Context
+        });
+        
+        this._board.addContent(this._factory.load);
+        this._views.addMain(this._board.Content);
     }
 
     showMenu(items) {
@@ -70,17 +72,17 @@ class Controller {
 
     showBoards(boardDefault) {
         let menuView = this._views,
-            loadBoard = this._loadBoard;
+            _self = this;
 
         menuView.menuItems.on('click', function() {
             let boardId = $(this).attr('id'); 
-            loadBoard(boardId);
+            _self._loadBoard(boardId);
             menuView.itemsMenuDeactive();
             menuView.itemMenuActive(boardId);
         });
 
         this._views.itemMenuActive(boardDefault.Id);
-        loadBoard(boardDefault.Id);
+        this._loadBoard(boardDefault.Id);
     }
 }
 

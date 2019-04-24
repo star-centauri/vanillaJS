@@ -7,8 +7,13 @@ import {FactoryPattern} from './app/boards.js';
 
 export class AppView {
     constructor() {
+        this._main = $("#main");
         this._menu = $("#boardSelector");
         this._userLogon = $(".dropdown-user");
+    }
+
+    addMain(board) {
+        this._main.append(board);
     }
 
     showModal(title, content, footer, options) {
@@ -104,6 +109,7 @@ export class Board {
     constructor() {
         this._layout = $('<section>');
         this._filterSelection = $("#filterSelection");
+        this._header = $('<div class="header-content">');
         this._content = $('<article id="content" class="col-md-12">');
     }
 
@@ -118,20 +124,29 @@ export class Board {
     }
 
     _build(model) {
-        let header = $('<div class="header-content">');
-        header.append(`<ul class="page-breadcrumb">${model.Title}</ul>`);
+        this._header.append(`<ul class="page-breadcrumb">${model.Title}</ul>`);
 
         if(model.useAdvancedFilter)
             this._filterSelection.append(model.getAdvancedFilter);          
         
         if (model.useToolbar) 
-            header.append(this._toolbar(model.getToolbar, model.useAdvancedFilter));
+            this._header.append(this._toolbar(model.getToolbar, model.useAdvancedFilter));
         
-        this._layout.append(header);
+        this._layout.append(this._header);
+    }
+
+    clear() {
+        this._content.empty();
+        this._filterSelection.empty();
+        this._header.empty();
     }
 
     get Context() {
         return this._content;
+    }
+
+    get Content() {
+        return this._layout;
     }
 
     addContent(model) {

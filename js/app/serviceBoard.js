@@ -21,7 +21,7 @@ export class Ocorrencias {
         .then(filename => { onSuccess(filename) })
         .catch(err => {
             console.log(err);
-            GenerateFile.fileExist(error.Message);
+            GenerateFile.fileExist(err.Message);
         })
     }
 }

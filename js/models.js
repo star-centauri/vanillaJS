@@ -52,7 +52,7 @@ export class UserLogon {
 export class Board {
     constructor(title, context, useRefresh, 
                 command, showLoad, toolbarItems, 
-                advancedFilter, proxy) {
+                advancedFilter, useFilter, proxy) {
         this._validation(title, context);
         this._title = title;
         this._context = context;
@@ -77,7 +77,7 @@ export class Board {
     }
 
     _create() {
-        if(_self._showBoardLoad)
+        if(this._showBoardLoad)
             this._searchCommand();
         
         if(this._useFilter)
