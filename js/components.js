@@ -52,7 +52,7 @@ class Element {
     }
 }
 
-class layout {
+export class layout {
     constructor(element) {
         if (element == undefined) {
             throw new Error("element undefined");
@@ -221,9 +221,77 @@ export class Metronic {
     }
 }
 
+export class Portlet extends layout {
+    constructor() {
+        super('<div>');
+
+        this._keys = {
+            portlet: Metronic.Portlet.portlet,
+            style: Metronic.BackGround.Inverse,
+            title: Metronic.Portlet.title,
+            body: Metronic.Portlet.body,
+            caption: Metronic.Portlet.caption,
+            tools: Metronic.Portlet.tools
+        }
+        
+        this._header = $('<div>');
+        this._body = $('<div>');
+        this.create();
+    }
+
+    create() {
+        super.addClass([this._keys.portlet, this._keys.style].join(' '));
+        super.append(this._header.addClass(this._keys.title));
+        super.append(this._body.addClass(this._keys.body));
+    }
+
+    setTitle(element) {
+        let caption = $('<div>');
+
+        let adicionarItem = item => {
+            caption.append(item);
+        }
+
+        if(Array.isArray(element)) {
+            var length = element.length;
+            for (var i = 0; i < length; i++) {
+                adicionarItem(element[i]);
+            }
+        } else {
+            adicionarItem(element);
+        }
+
+        caption.addClass(this._keys.caption);
+        this._header.append(caption);
+    }
+
+    setToolbar(items) {
+        let toolbar = $(`<div class="${this._keys.tools}">`);
+
+        if(Array.isArray(items)) {
+            var length = items.length;
+
+            for (var i = 0; i < length; i++) {
+                toolbar.append(items[i]);
+            }   
+        } else {
+            toolbar.append(items);
+        }
+
+        this._header.append(toolbar);
+    }
+
+    appendContent(element) {
+        this._body.append(element);
+    }
+}
+
 export class MiniElement {
     static icon(glyphiconClass) {
         return `<i class="${glyphiconClass}"></i>`;
+    }
+    static img(url) {
+        return $(`<img src="${url}" class="img-thumbnail">`);
     }
 }
 
@@ -456,4 +524,100 @@ export class refreshButton extends Button {
             }
         }); 
     }
+}
+
+export class PortletDefault extends Portlet {
+    constructor(options) {
+        super();
+        this._options = options;
+
+        this._validation();
+        this.portlet();
+    }
+
+    _validation() {
+        if (!this._options)
+            throw new Error("options is undefined");
+
+        if (!(this._options.title && (typeof this._options.title == "string")))
+            throw new Error("Parameter 'title' is null or not set to string.");
+
+        if (!(this._options.icon && (typeof this._options.icon == "string")))
+            throw new Error("Parameter 'icon' is null or not set to string.");
+    }
+
+    portlet() {
+        let _settings = {
+                title: Metronic.Portlet.captionSubject,
+                titleFont: Metronic.Font.flamingo,
+                titleCaptionFont: function () {
+                    return [_settings.title, Metronic.Font.bold, Metronic.Font.uppercase, _settings.titleFont].join(' ');
+                }
+            },
+            contents = [];
+
+        function addIcon(icon) {
+            var icon = $(MiniElement.icon(icon));
+            icon.addClass(_settings.titleFont);
+            contents.push(icon);
+        }
+
+        function addCaption(caption) {
+            contents.push(createText(caption));
+        }
+
+        function createText(value) {
+            return $(`<span class="${_settings.titleCaptionFont()}">`).text(value);
+        }
+
+        addIcon(this._options.icon);
+        addCaption(this._options.title);
+        super.setTitle(contents);
+    }
+}
+
+export class Thumb extends Element {
+    constructor(urlImage, showDialog, cssClass = '') {
+        super('<a href="#">');
+
+        this._showDialog = showDialog;
+        this._urlImage = urlImage;
+        this._cssClass = cssClass;
+    }
+
+    create() {
+        let element = this.htmlTemplate;
+        element.addClass('showThumb');
+        element.addClass(this._cssClass);
+        element.append(MiniElement.img(this.getUrlImage()));             
+
+        if (this._showDialog && this.hasUrlImage()) {
+            element.bind('click', this.showDialogImage);
+        }  
+
+        return element;
+    }
+
+    getUrlImage() {
+        return this.hasUrlImage() 
+            ? this._urlImage : this.getNoImageUrl();
+    }
+
+    hasUrlImage() {
+        return this._urlImage != null && this._urlImage != 'noImage';
+    }
+
+    getNoImageUrl() {
+        return "/assets/img/semFoto.png";
+    }
+
+    showDialogImage(event) {
+        event.preventDefault();
+
+        let url = $(this).find('img').attr('src');
+        let view = $('<div id="thumbPreview" title="Pré-visualização de imagem"></div>')
+        .append($("<img>").attr('src', url).addClass("img-thumbnail"))
+
+        new Modal(undefined, view, undefined, { closebutton: true }).show();
+    };
 }

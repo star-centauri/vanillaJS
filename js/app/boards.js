@@ -1,10 +1,15 @@
-import {Ocorrencias} from './serviceBoard.js';
+import {Ocorrencias, BindState} from './serviceBoard.js';
 import {ProxyFactory, GenerateFile} from '../services.js';
 import {Board} from '../models.js';
 import {MiniElement as i$, 
         Metronic as m$,
         Button,
-        GridLayout} from '../components.js';
+        GridLayout,
+        PortletDefault,
+        layout as l$,
+        Thumb,
+        Modal,
+        Alert} from '../components.js';
 
 export class FactoryPattern {
     constructor(options) {
@@ -16,17 +21,17 @@ export class FactoryPattern {
             case "Pesquisadores":
                 return new Pesquisador(this._options).board;
             case "Ciclos":
-                return new Ciclo(this._options);
+                return new Ciclo(this._options).board;
             case "BR":
-                return new Br(this._options);
+                return new Br(this._options).board;
             case "Operacao":
                 return new Operacao(this._options).board;
             case "Gerencial":
-                return new Gerencial(this._options);
+                return new Gerencial(this._options).board;
             case "Pedidos":
-                return new Pedidos(this._options);
+                return new Pedidos(this._options).board;
             case "Cronograma":
-                return new Cronograma(this._options);
+                return new Cronograma(this._options).board;
             default:
                 console.log("O Board inicial não foi definido");
                 break;
@@ -64,6 +69,7 @@ class ComponentsSpecialist {
 class Operacao {
     constructor(options) {
         this._options = options;
+        this._state = new BindState();
         this._proxy = new ProxyFactory();
 
         this._commands = this._command();
@@ -75,9 +81,7 @@ class Operacao {
         let showContent = this._showContent();
 
         this._layout.adicionarRelatorios(4, showContent.postoAnalitico());
-        //_layout.adicionarRelatorios();
-        //_layout.adicionarRelatorios();
-        //_layout.adicionarOcorrencias();
+        this._layout.adicionarOcorrencias(12, showContent.ocorrencias());
     }
 
     _createLayout() {
@@ -101,16 +105,24 @@ class Operacao {
     _command() {
         return {
             searchOcorrencias: () => {
-                return {
-                    onSuccess: (ocorrencias) => {
-                        this._showContent(ocorrencias);
-                    }
-                    ,
-                    command: Ocorrencias.Buscar
-                }
+                Ocorrencias.Buscar((ocorrencias) => {
+                    console.log(ocorrencias);
+                    this._state.clear();
+                    this._state.callbackState(ocorrencias);
+                });
             },
             downloadPostoAnalitico: (onSuccess) => {
                 Ocorrencias.ConsultarPostoAnalitico(onSuccess);
+            },
+            atualizarLimitePreco: (ocorrenciaId) => {
+                let options = {
+                    model: { id: ocorrenciaId },
+                    onSuccess: (msg) => {
+                        new Alert(msg).showSuccess();
+                        this._commands.searchOcorrencias();
+                    }
+                }
+                Ocorrencias.AtualizarLimitePreco(options.model, options.onSuccess);
             }
         }
     }
@@ -143,8 +155,187 @@ class Operacao {
             return ComponentsSpecialist.createPanel(title, content);
         }
 
+        function adicionarOcorrencias() {
+            let container = $('<section>');
+
+            function portlet(table) {
+                let context = new PortletDefault({
+                    icon: "icon-settings",
+                    title: "Ocorrências Pendentes"
+                });
+
+                context.addClass("custom-ocorrencia");
+                context.appendContent(table);
+                return context.getHtml();
+            }
+            
+            function table() {
+                const cabecalho = ["Código Posto", "Bandeira", "Cidade/UF", "Data", "Código Externo", "Descrição", "Preço Atual", " "];
+                
+                let content =  $(`<div class="table-scrollable table-scrollable-borderless">
+                                    <table class="table table-hover table-light">
+                                        <thead>
+                                            <tr class="${[m$.Font.uppercase, m$.BackGround.greySteel].join(' ')}">
+                                                ${cabecalho.map(c => `<th>${c}</th>`).join(" ")}
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                 </div>`);
+
+                let onBindState = function() {
+                    _self._state.layouState = content.find('tbody');
+                    _self._state.callbackState = function(ocorrencias) {
+                        var length = ocorrencias.length;
+
+                        if(!length)
+                           _self._state.layouState.append('<div class="default-ocorrencia">Sem ocorrencias pendentes no momento.</div>');
+
+                        for(let i = 0; i < length; i++) {
+                            ocorrencias[i].exibirDetalhe = atribuirBotaoExibirDetalhe(ocorrencias[i]);
+                            adicionarOcorrencia(ocorrencias[i]);
+                        }
+
+                        function atribuirBotaoExibirDetalhe(ocorrencia) {
+                            var exibirBotaoDetalhe = function() {
+                                var btn = new Button();
+
+                                var stylesBtn = function() {
+                                    btn.setGlyphicon(m$.Icon.infoCircle);
+                                    btn.addClass([
+                                        m$.Button.btn,
+                                        m$.Button.formCircle,
+                                        m$.Button.icon,
+                                        m$.Button.bgDefault
+                                    ].join(' '));
+                                    btn.setTitle("Detalhe Ocorrência");
+                                }();
+
+                                btn.onClick(function() {
+                                    modalDetalheOcorrencia(ocorrencia);
+                                });
+
+                                return btn.getHtml();
+                            }
+
+                            function modalDetalheOcorrencia(ocorrencia) {
+                                let layout = new function () {
+                                    let header = $('<header>');
+                                    let body = $('<section id="modal">');
+
+                                    this.appendHeader = function (element) {
+                                        header.append(element);
+                                    }
+
+                                    this.appendBody = function (element) {
+                                        body.append(element);
+                                    }
+
+                                    this.getHeader = function () {
+                                        return header;
+                                    }
+
+                                    this.getBody = function () {
+                                        return body;
+                                    }
+                                }
+
+                                function titulo() {
+                                    return `<div class="${[m$.Portlet.caption, m$.Font.sunglo].join(' ')}">
+                                                ${i$.icon(m$.Icon.cog)}
+                                                <span class="caption-subject bold uppercase"> Detalhe Da Ocorrencia</span>
+                                            </div>`;
+                                }
+
+                                function exibirDetalhe(detalhe) {
+                                    let container = new l$("<article>");
+
+                                    function informacao(id, descricao, precoAtual) {
+                                        let element = $('<div class="detalhe-ocorrencia alert alert-danger">');
+
+                                        let exibirBotaoAtualizarLimite = function() {
+                                            let btn = new Button("Atualizar Limite");
+                                            btn.addAttr("data-dismiss", "modal");
+                                            btn.addClass([
+                                                m$.Button.btn,
+                                                m$.Button.formCircle,
+                                                m$.Button.sizeSm,
+                                                m$.Button.bgDanger
+                                            ].join(' '));
+
+                                            btn.onClick(function() {
+                                                _self._commands.atualizarLimitePreco(id);
+                                            });
+
+                                            return $(`<div class="${m$.Pull.right}">`).append(btn.getHtml());
+                                        }
+
+                                        let exibirDescricao = function() {
+                                            return `<div class="${m$.Pull.left}"><strong>Descrição: </strong> ${descricao}</div>`;
+                                        }
+
+                                        let exibirPrecoAtual = function() {
+                                            return `<div class="${m$.Pull.left}"><strong>Preço Atual: </strong> ${precoAtual}</div>`;
+                                        }
+
+                                        element.append(exibirDescricao());
+                                        element.append(exibirPrecoAtual());
+                                        element.append(exibirBotaoAtualizarLimite());
+
+                                        return element;
+                                    }
+
+                                    container.append(informacao(detalhe.Id, detalhe.Descricao, detalhe.PrecoAtual));
+                                    container.append(new Thumb(detalhe.UrlFotoPlacar, false, "img-list-resumo-coleta").getHtml());
+                                    return container.getHtml();
+                                }
+
+                                var show = function () {
+                                    layout.appendHeader(titulo());
+                                    layout.appendBody(exibirDetalhe(ocorrencia));
+                                    
+                                    new Modal(
+                                        layout.getHeader().html(),
+                                        layout.getBody(),
+                                        '',
+                                        { css: false, size: false }
+                                    ).show();
+                                }();
+                            }
+
+                            return exibirBotaoDetalhe();
+                        }
+
+                        function adicionarOcorrencia(ocorrencia) {
+                            var element = $('<tr>').attr("id", ocorrencia.Id);                               
+                                function adicionarColuna(coluna) {
+                                    element.append($('<td>').append(coluna));
+                                }
+
+                                adicionarColuna(ocorrencia.CodigoPosto);
+                                adicionarColuna(ocorrencia.Bandeira);
+                                adicionarColuna(ocorrencia.CidadeUf);
+                                adicionarColuna(ocorrencia.Data);
+                                adicionarColuna(ocorrencia.CodigoExterno);
+                                adicionarColuna(ocorrencia.Descricao);
+                                adicionarColuna(ocorrencia.PrecoAtual);
+                                adicionarColuna(ocorrencia.exibirDetalhe);
+
+                                _self._state.layouState.append(element);
+                        }
+                    }
+                }();
+
+                return content;
+            }
+
+            container.append(portlet(table()));
+            return container;
+        }
+
         return {
-            postoAnalitico: consultaPostoAnalitico
+            postoAnalitico: consultaPostoAnalitico,
+            ocorrencias: adicionarOcorrencias
         }
     }
 
@@ -172,29 +363,18 @@ class Pesquisador {
     }
 
     _initialization() {
-        let showContent = this._showContent();
-
-        this._layout.adicionarRelatorios(4, showContent.postoAnalitico());
-        //_layout.adicionarRelatorios();
-        //_layout.adicionarRelatorios();
-        //_layout.adicionarOcorrencias();
+        this._layout.adicionarContent(12, this._showContent());
     }
 
     _createLayout() {
         let layout = this._options.context,
-            relatorio = new GridLayout(),
-            ocorrencias = new GridLayout();
+            content = new GridLayout();
 
-        layout.adicionarRelatorios = function(size, element) {
-            relatorio.addColunm(size, element);
-        }
-
-        layout.adicionarOcorrencias = function(size, element) {
-            ocorrencias.addColunm(size, element);
+        layout.adicionarContent = function(size, element) {
+            content.addColunm(size, element);
         }
         
-        layout.append(relatorio.getHtml());
-        layout.append(ocorrencias.getHtml());
+        layout.append(content.getHtml());
         return layout;
     }
 
@@ -216,36 +396,7 @@ class Pesquisador {
     }
 
     _showContent() {
-        let _self = this; //para problemas com funções lexicas
-
-        function consultaPostoAnalitico() {
-            let content = $('<div>'),
-                title = `<h4>${i$.icon(m$.Icon.checkSquare)} Teste</h4>`
-            
-            function exportButton() {
-                let btn = new Button("Gerar"),
-                downloadConsulta = () => {
-                    _self._commands.downloadPostoAnalitico(filename => 
-                                    GenerateFile.downloadFile(filename));
-                };
-
-                btn.addClass([
-                    m$.Button.btn,
-                    m$.Button.bgDefault, 
-                    m$.Pull.right
-                ].join(' '));
-
-                btn.onClick(downloadConsulta);
-                return btn.getHtml();
-            }
-
-            content.append(exportButton());
-            return ComponentsSpecialist.createPanel(title, content);
-        }
-
-        return {
-            postoAnalitico: consultaPostoAnalitico
-        }
+        return `<h1>Board de Pesquisador</h1>`
     }
 
     get board() {
@@ -264,29 +415,299 @@ class Pesquisador {
 class Ciclo {
     constructor(options) {
         this._options = options;
+        this._proxy = new ProxyFactory();
+
+        this._commands = this._command();
+        this._layout = this._createLayout();
+        this._initialization();
+    }
+
+    _initialization() {
+        this._layout.adicionarContent(12, this._showContent());
+    }
+
+    _createLayout() {
+        let layout = this._options.context,
+            content = new GridLayout();
+
+        layout.adicionarContent = function(size, element) {
+            content.addColunm(size, element);
+        }
+        
+        layout.append(content.getHtml());
+        return layout;
+    }
+
+    _command() {
+        return {
+            searchOcorrencias: () => {
+                return {
+                    onSuccess: (ocorrencias) => {
+                        this._showContent(ocorrencias);
+                    }
+                    ,
+                    command: Ocorrencias.Buscar
+                }
+            },
+            downloadPostoAnalitico: (onSuccess) => {
+                Ocorrencias.ConsultarPostoAnalitico(onSuccess);
+            }
+        }
+    }
+
+    _showContent() {
+        return `<h1>Board de Ciclo</h1>`
+    }
+
+    get board() {
+        return new Board("Operação / Ciclo", 
+                        this._options.context, 
+                        true, 
+                        this._commands.searchOcorrencias, 
+                        true, 
+                        [], 
+                        false, 
+                        false,
+                        this._proxy);
     }
 }
 
 class Gerencial {
     constructor(options) {
         this._options = options;
+        this._proxy = new ProxyFactory();
+
+        this._commands = this._command();
+        this._layout = this._createLayout();
+        this._initialization();
+    }
+
+    _initialization() {
+        this._layout.adicionarContent(12, this._showContent());
+    }
+
+    _createLayout() {
+        let layout = this._options.context,
+            content = new GridLayout();
+
+        layout.adicionarContent = function(size, element) {
+            content.addColunm(size, element);
+        }
+        
+        layout.append(content.getHtml());
+        return layout;
+    }
+
+    _command() {
+        return {
+            searchOcorrencias: () => {
+                return {
+                    onSuccess: (ocorrencias) => {
+                        this._showContent(ocorrencias);
+                    }
+                    ,
+                    command: Ocorrencias.Buscar
+                }
+            },
+            downloadPostoAnalitico: (onSuccess) => {
+                Ocorrencias.ConsultarPostoAnalitico(onSuccess);
+            }
+        }
+    }
+
+    _showContent() {
+        return `<h1>Board de Gerencial</h1>`
+    }
+
+    get board() {
+        return new Board("Operação / Gerencial", 
+                        this._options.context, 
+                        true, 
+                        this._commands.searchOcorrencias, 
+                        true, 
+                        [], 
+                        false, 
+                        false,
+                        this._proxy);
     }
 }
 
 class Pedidos {
     constructor(options) {
         this._options = options;
+        this._proxy = new ProxyFactory();
+
+        this._commands = this._command();
+        this._layout = this._createLayout();
+        this._initialization();
+    }
+
+    _initialization() {
+        this._layout.adicionarContent(12, this._showContent());
+    }
+
+    _createLayout() {
+        let layout = this._options.context,
+            content = new GridLayout();
+
+        layout.adicionarContent = function(size, element) {
+            content.addColunm(size, element);
+        }
+        
+        layout.append(content.getHtml());
+        return layout;
+    }
+
+    _command() {
+        return {
+            searchOcorrencias: () => {
+                return {
+                    onSuccess: (ocorrencias) => {
+                        this._showContent(ocorrencias);
+                    }
+                    ,
+                    command: Ocorrencias.Buscar
+                }
+            },
+            downloadPostoAnalitico: (onSuccess) => {
+                Ocorrencias.ConsultarPostoAnalitico(onSuccess);
+            }
+        }
+    }
+
+    _showContent() {
+        return `<h1>Board de Pedidos</h1>`
+    }
+
+    get board() {
+        return new Board("Operação / Pedido", 
+                        this._options.context, 
+                        true, 
+                        this._commands.searchOcorrencias, 
+                        true, 
+                        [], 
+                        false, 
+                        false,
+                        this._proxy);
     }
 }
 
 class Br {
     constructor(options) {
         this._options = options;
+        this._proxy = new ProxyFactory();
+
+        this._commands = this._command();
+        this._layout = this._createLayout();
+        this._initialization();
+    }
+
+    _initialization() {
+        this._layout.adicionarContent(12, this._showContent());
+    }
+
+    _createLayout() {
+        let layout = this._options.context,
+            content = new GridLayout();
+
+        layout.adicionarContent = function(size, element) {
+            content.addColunm(size, element);
+        }
+        
+        layout.append(content.getHtml());
+        return layout;
+    }
+
+    _command() {
+        return {
+            searchOcorrencias: () => {
+                return {
+                    onSuccess: (ocorrencias) => {
+                        this._showContent(ocorrencias);
+                    }
+                    ,
+                    command: Ocorrencias.Buscar
+                }
+            },
+            downloadPostoAnalitico: (onSuccess) => {
+                Ocorrencias.ConsultarPostoAnalitico(onSuccess);
+            }
+        }
+    }
+
+    _showContent() {
+        return `<h1>Board de BR</h1>`
+    }
+
+    get board() {
+        return new Board("Operação / BR", 
+                        this._options.context, 
+                        true, 
+                        this._commands.searchOcorrencias, 
+                        true, 
+                        [], 
+                        false, 
+                        false,
+                        this._proxy);
     }
 }
 
 class Cronograma {
     constructor(options) {
         this._options = options;
+        this._proxy = new ProxyFactory();
+
+        this._commands = this._command();
+        this._layout = this._createLayout();
+        this._initialization();
+    }
+
+    _initialization() {
+        this._layout.adicionarContent(12, this._showContent());
+    }
+
+    _createLayout() {
+        let layout = this._options.context,
+            content = new GridLayout();
+
+        layout.adicionarContent = function(size, element) {
+            content.addColunm(size, element);
+        }
+        
+        layout.append(content.getHtml());
+        return layout;
+    }
+
+    _command() {
+        return {
+            searchOcorrencias: () => {
+                return {
+                    onSuccess: (ocorrencias) => {
+                        this._showContent(ocorrencias);
+                    }
+                    ,
+                    command: Ocorrencias.Buscar
+                }
+            },
+            downloadPostoAnalitico: (onSuccess) => {
+                Ocorrencias.ConsultarPostoAnalitico(onSuccess);
+            }
+        }
+    }
+
+    _showContent() {
+        return `<h1>Board de Cronograma</h1>`
+    }
+
+    get board() {
+        return new Board("Operação / Cronograma", 
+                        this._options.context, 
+                        true, 
+                        this._commands.searchOcorrencias, 
+                        true, 
+                        [], 
+                        false, 
+                        false,
+                        this._proxy);
     }
 }
