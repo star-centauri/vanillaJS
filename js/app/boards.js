@@ -1,5 +1,5 @@
-import {Ocorrencias, BindState} from './serviceBoard.js';
-import {ProxyFactory, GenerateFile} from '../services.js';
+import {Ocorrencias} from './serviceBoard.js';
+import {ProxyFactory, GenerateFile, BindState} from '../services.js';
 import {Board} from '../models.js';
 import {MiniElement as i$, 
         Metronic as m$,
@@ -72,7 +72,7 @@ class Operacao {
         this._state = new BindState();
         this._proxy = new ProxyFactory();
 
-        this._commands = this._command();
+        this._commands = this._getSettings();
         this._layout = this._createLayout();
         this._initialization();
     }
@@ -102,7 +102,7 @@ class Operacao {
         return layout;
     }
 
-    _command() {
+    _getSettings() {
         return {
             searchOcorrencias: () => {
                 Ocorrencias.Buscar((ocorrencias) => {

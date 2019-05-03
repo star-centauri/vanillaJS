@@ -139,3 +139,30 @@ export class GenerateFile {
             new Alert(err.Message).showError();
     }
 }
+
+export class BindState {
+    constructor() {
+        this._layoutState = undefined;
+        this._callbackState = undefined;
+    }
+
+    set layouState(layout) {
+        this._layoutState = layout;
+    }
+
+    set callbackState(callback) {
+        this._callbackState = callback;
+    }
+
+    clear() {
+        this._layoutState.empty();
+    }
+
+    get callbackState() {
+        return this._callbackState;
+    }
+
+    get layouState() {
+        return this._layoutState;
+    }
+}
