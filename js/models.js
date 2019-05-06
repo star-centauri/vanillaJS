@@ -63,7 +63,7 @@ export class Board {
         this._toolbarItems = toolbarItems || [];
         this._advancedFilter = advancedFilter;
         
-        this._proxy = proxy;//new ProxyFactory();
+        this._proxy = proxy;
         this._create();
     }
 

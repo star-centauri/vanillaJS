@@ -357,13 +357,88 @@ class Pesquisador {
         this._options = options;
         this._proxy = new ProxyFactory();
 
-        this._commands = this._command();
+        this._commands = this._getSettings();
         this._layout = this._createLayout();
         this._initialization();
     }
 
     _initialization() {
         this._layout.adicionarContent(12, this._showContent());
+    }
+
+    _toolbarItems() {
+        let toobarItems = [],
+            listaProduto = new BindState(),
+            QuantitativoProdutos = new BindState();
+        
+        let abrirCarrinho = function(elementDad) {
+            let portlet = $('<section id="section-cart">'),
+                header = $('<header>'),
+                body = $('<article>'),
+                footer = $('<footer>');
+
+            header.append("Adicionados ao carrinho:");
+            header.append(i$.icon(m$.Icon.close));
+            body.append("Não há nenhum produto no carrinho.");
+
+            portlet.append(header);
+            portlet.append(body);
+            portlet.append(footer);
+
+            elementDad.hide();
+            header.on("click", '.fa-times', function() {
+                $(this).closest('section').remove();
+                elementDad.show();
+            });
+
+            return portlet;
+        }
+
+        function carrinho() {
+            let context = $('<section class="btn-insert">');
+            let createButton = function() {
+                let btn = new Button();
+                btn.setGlyphicon('fa fa-cart-plus');
+                btn.addClass([m$.Button.btn, m$.Button.formCircle, m$.Button.icon, m$.Button.bgDefault].join(' '));
+
+                return btn.getHtml();
+            };
+            let createOpenCart = function() {
+                return `<section id="section-cart">
+                            <header>Adicionados ao carrinho: ${i$.icon(m$.Icon.close)}</header>
+                            <article>Não há nenhum produto no carrinho.</article>
+                            <footer></footer>
+                        </section>`;
+
+                //elementDad.hide();
+                // header.on("click", '.fa-times', function() {
+                //     $(this).closest('section').remove();
+                //     elementDad.show();
+                // });
+            };
+            context.append(createButton());
+            context.append(createOpenCart());
+            context.find("#section-cart").hide();
+
+            context.on("click", "button", function() {
+                context.find("#section-cart").show();
+                $(this).hide();
+            });
+
+            context.on("click", "#section-cart .fa-times", function() {
+                context.find("#section-cart").hide();
+                context.find('button').show();
+            })
+
+            return context;
+        }
+
+        function create() {
+            toobarItems.push(carrinho);
+            return toobarItems;
+        }
+
+        return create();
     }
 
     _createLayout() {
@@ -378,7 +453,7 @@ class Pesquisador {
         return layout;
     }
 
-    _command() {
+    _getSettings() {
         return {
             searchOcorrencias: () => {
                 return {
@@ -396,7 +471,7 @@ class Pesquisador {
     }
 
     _showContent() {
-        return `<h1>Board de Pesquisador</h1>`
+        return `<h1>Board de Carrinho</h1>`
     }
 
     get board() {
@@ -405,7 +480,7 @@ class Pesquisador {
                         true, 
                         this._commands.searchOcorrencias, 
                         true, 
-                        [], 
+                        this._toolbarItems(), 
                         false, 
                         false,
                         this._proxy);

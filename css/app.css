@@ -1,0 +1,10 @@
+#section-cart {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+}
+#section-cart i {
+    position: relative;
+    float: right;
+    cursor: pointer;
+}

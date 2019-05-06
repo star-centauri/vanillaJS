@@ -129,6 +129,7 @@ export class Board {
         if(model.useAdvancedFilter)
             this._filterSelection.append(model.getAdvancedFilter);          
         
+        console.log(model.useToolbar);
         if (model.useToolbar) 
             this._header.append(this._toolbar(model.getToolbar, model.useAdvancedFilter));
         
