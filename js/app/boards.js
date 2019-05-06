@@ -106,7 +106,6 @@ class Operacao {
         return {
             searchOcorrencias: () => {
                 Ocorrencias.Buscar((ocorrencias) => {
-                    console.log(ocorrencias);
                     this._state.clear();
                     this._state.callbackState(ocorrencias);
                 });
@@ -356,6 +355,7 @@ class Pesquisador {
     constructor(options) {
         this._options = options;
         this._proxy = new ProxyFactory();
+        this._state = new BindState();
 
         this._commands = this._getSettings();
         this._layout = this._createLayout();
@@ -363,36 +363,15 @@ class Pesquisador {
     }
 
     _initialization() {
-        this._layout.adicionarContent(12, this._showContent());
+        let showContent = this._showContent();
+
+        this._layout.adicionarLoja(12, showContent.lojaOnline());
     }
 
     _toolbarItems() {
         let toobarItems = [],
             listaProduto = new BindState(),
             QuantitativoProdutos = new BindState();
-        
-        let abrirCarrinho = function(elementDad) {
-            let portlet = $('<section id="section-cart">'),
-                header = $('<header>'),
-                body = $('<article>'),
-                footer = $('<footer>');
-
-            header.append("Adicionados ao carrinho:");
-            header.append(i$.icon(m$.Icon.close));
-            body.append("Não há nenhum produto no carrinho.");
-
-            portlet.append(header);
-            portlet.append(body);
-            portlet.append(footer);
-
-            elementDad.hide();
-            header.on("click", '.fa-times', function() {
-                $(this).closest('section').remove();
-                elementDad.show();
-            });
-
-            return portlet;
-        }
 
         function carrinho() {
             let context = $('<section class="btn-insert">');
@@ -405,16 +384,15 @@ class Pesquisador {
             };
             let createOpenCart = function() {
                 return `<section id="section-cart">
-                            <header>Adicionados ao carrinho: ${i$.icon(m$.Icon.close)}</header>
-                            <article>Não há nenhum produto no carrinho.</article>
+                            <header>
+                                <span class="${[m$.Font.flamingo, m$.Font.uppercase].join(' ')}"> Adicionados ao carrinho: </span> 
+                                ${i$.icon(m$.Icon.close)}
+                            </header>
+                            <article>
+                                <span class="default-ocorrencia"> Não há nenhum produto no carrinho. </span>
+                            </article>
                             <footer></footer>
                         </section>`;
-
-                //elementDad.hide();
-                // header.on("click", '.fa-times', function() {
-                //     $(this).closest('section').remove();
-                //     elementDad.show();
-                // });
             };
             context.append(createButton());
             context.append(createOpenCart());
@@ -445,7 +423,7 @@ class Pesquisador {
         let layout = this._options.context,
             content = new GridLayout();
 
-        layout.adicionarContent = function(size, element) {
+        layout.adicionarLoja = function(size, element) {
             content.addColunm(size, element);
         }
         
@@ -455,30 +433,61 @@ class Pesquisador {
 
     _getSettings() {
         return {
-            searchOcorrencias: () => {
-                return {
-                    onSuccess: (ocorrencias) => {
-                        this._showContent(ocorrencias);
-                    }
-                    ,
-                    command: Ocorrencias.Buscar
-                }
-            },
-            downloadPostoAnalitico: (onSuccess) => {
-                Ocorrencias.ConsultarPostoAnalitico(onSuccess);
+            searchLoja: () => {
+                this._state.clear();
+                this._state.callbackState([
+                    {img: 'https://picsum.photos/200/150/?random', title: "Arroz Agulhinha", describe: "Arroz de 5kg tipo 1, fino", price: 'R$13,48'},
+                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
+                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
+                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
+                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
+                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'}
+                ]);
             }
         }
     }
 
     _showContent() {
-        return `<h1>Board de Carrinho</h1>`
+        let _self = this;
+
+        function lojaOnline() {
+            let content = $('<div class="row">');
+
+            function createProduct(item) {
+                return `<section class="col-sm-6 col-md-4 col-lg-3 mt-4">
+                                    <div class="card card-inverse card-info">
+                                        <img class="card-img-top" src="${item.img}">
+                                        <div class="card-block">
+                                            <h4 class="card-title">${item.title}</h4>
+                                            <div class="card-text">${item.describe}</div>
+                                        </div>
+                                        <div class="card-footer">
+                                            <small>${item.price}</small>
+                                            <button class="btn btn-info float-right btn-sm pull-right">Adicionar ao Carrinho</button>
+                                        </div>
+                                    </div>
+                              </section>`
+            }
+
+            let onBindState = function() {
+                _self._state.layouState = content;
+                _self._state.callbackState = function(products) {
+                    content.append(products.map(p => createProduct(p)).join(' '));
+                }
+            }();
+            return content;
+        }
+
+        return {
+            lojaOnline: lojaOnline
+        }
     }
 
     get board() {
-        return new Board("Operação / Pesquisadores", 
+        return new Board("Operação / Loja Online", 
                         this._options.context, 
                         true, 
-                        this._commands.searchOcorrencias, 
+                        this._commands.searchLoja, 
                         true, 
                         this._toolbarItems(), 
                         false, 
