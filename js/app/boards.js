@@ -356,6 +356,9 @@ class Pesquisador {
         this._options = options;
         this._proxy = new ProxyFactory();
         this._state = new BindState();
+        this._keys = {
+            addProduct = "addProduct"
+        }
 
         this._commands = this._getSettings();
         this._layout = this._createLayout();
@@ -370,8 +373,8 @@ class Pesquisador {
 
     _toolbarItems() {
         let toobarItems = [],
-            listaProduto = new BindState(),
-            QuantitativoProdutos = new BindState();
+            quantitativeProduct = 0,
+            _self = this;
 
         function carrinho() {
             let context = $('<section class="btn-insert">');
@@ -394,6 +397,11 @@ class Pesquisador {
                             <footer></footer>
                         </section>`;
             };
+
+            function addProductCart(product) {
+                console.log(product);
+            }
+
             context.append(createButton());
             context.append(createOpenCart());
             context.find("#section-cart").hide();
@@ -406,8 +414,11 @@ class Pesquisador {
             context.on("click", "#section-cart .fa-times", function() {
                 context.find("#section-cart").hide();
                 context.find('button').show();
-            })
+            });
 
+            let onBindState = function() {
+                _self._proxy.register(_self._keys.addProduct, (key, value) => { addProductCart(value); })
+            }();
             return context;
         }
 
@@ -436,12 +447,12 @@ class Pesquisador {
             searchLoja: () => {
                 this._state.clear();
                 this._state.callbackState([
-                    {img: 'https://picsum.photos/200/150/?random', title: "Arroz Agulhinha", describe: "Arroz de 5kg tipo 1, fino", price: 'R$13,48'},
-                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
-                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
-                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
-                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
-                    {img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'}
+                    {id: 1, img: 'https://picsum.photos/200/150/?random', title: "Arroz Agulhinha", describe: "Arroz de 5kg tipo 1, fino", price: 'R$13,48'},
+                    {id: 2, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
+                    {id: 3, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
+                    {id: 4, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
+                    {id: 5, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
+                    {id: 6, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'}
                 ]);
             }
         }
@@ -455,19 +466,23 @@ class Pesquisador {
 
             function createProduct(item) {
                 return `<section class="col-sm-6 col-md-4 col-lg-3 mt-4">
-                                    <div class="card card-inverse card-info">
-                                        <img class="card-img-top" src="${item.img}">
-                                        <div class="card-block">
-                                            <h4 class="card-title">${item.title}</h4>
-                                            <div class="card-text">${item.describe}</div>
-                                        </div>
-                                        <div class="card-footer">
-                                            <small>${item.price}</small>
-                                            <button class="btn btn-info float-right btn-sm pull-right">Adicionar ao Carrinho</button>
-                                        </div>
-                                    </div>
-                              </section>`
+                            <div class="card card-inverse card-info">
+                                <img class="card-img-top" src="${item.img}">
+                                <div class="card-block">
+                                    <h4 class="card-title">${item.title}</h4>
+                                    <div class="card-text">${item.describe}</div>
+                                </div>
+                                <div class="card-footer">
+                                    <small>${item.price}</small>
+                                    <button class="btn btn-info float-right btn-sm pull-right" id="${item.id}">Adicionar ao Carrinho</button>
+                                </div>
+                            </div>
+                        </section>`;
             }
+
+            content.on('click', 'section .card-footer button', function() {
+                alert($(this).attr("id"));
+            });
 
             let onBindState = function() {
                 _self._state.layouState = content;
