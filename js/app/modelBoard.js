@@ -30,3 +30,32 @@ export class ListOcorrencias {
         return this._list;
     }
 }
+
+export class ListProductors {
+    constructor(data) {
+        this._list = [];
+        this._createModel(data);
+    }
+
+    _serialize(data) {
+        return {
+            id: data.id,
+            img: data.img,
+            title: data.title,
+            describe: data.describe,
+            price: data.price
+        }
+    }
+
+    _createModel(data) {
+        let length = data.length;
+
+        for(let i = 0; i < length; i++) {
+            this._list.push(this._serialize(data[i]));
+        }
+    }
+
+    get productors() {
+        return this._list;
+    }
+}

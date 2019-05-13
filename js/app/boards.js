@@ -1,4 +1,5 @@
-import {Ocorrencias} from './serviceBoard.js';
+import {Ocorrencias, OnlineStorie} from './serviceBoard.js';
+import {ControllerStorie} from './controllerBoard.js';
 import {ProxyFactory, GenerateFile, BindState} from '../services.js';
 import {Board} from '../models.js';
 import {MiniElement as i$, 
@@ -353,12 +354,9 @@ class Operacao {
 
 class Pesquisador {
     constructor(options) {
-        this._options = options;
-        this._proxy = new ProxyFactory();
+        this._controller = new ControllerStorie();
         this._state = new BindState();
-        this._keys = {
-            addProduct = "addProduct"
-        }
+        this._options = options;
 
         this._commands = this._getSettings();
         this._layout = this._createLayout();
@@ -373,7 +371,6 @@ class Pesquisador {
 
     _toolbarItems() {
         let toobarItems = [],
-            quantitativeProduct = 0,
             _self = this;
 
         function carrinho() {
@@ -399,6 +396,7 @@ class Pesquisador {
             };
 
             function addProductCart(product) {
+                console.log("Testando");
                 console.log(product);
             }
 
@@ -417,7 +415,7 @@ class Pesquisador {
             });
 
             let onBindState = function() {
-                _self._proxy.register(_self._keys.addProduct, (key, value) => { addProductCart(value); })
+                _self._controller.registerAddProduct(function(value){ addProductCart(value) });
             }();
             return context;
         }
@@ -445,15 +443,11 @@ class Pesquisador {
     _getSettings() {
         return {
             searchLoja: () => {
-                this._state.clear();
-                this._state.callbackState([
-                    {id: 1, img: 'https://picsum.photos/200/150/?random', title: "Arroz Agulhinha", describe: "Arroz de 5kg tipo 1, fino", price: 'R$13,48'},
-                    {id: 2, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
-                    {id: 3, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
-                    {id: 4, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
-                    {id: 5, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'},
-                    {id: 6, img: 'https://picsum.photos/200/150/?random', title: "Feijão Carioca", describe: "Feijão carioca tipo 3 de 1kg", price: 'R$5,70'}
-                ]);
+                OnlineStorie.Search((productors) => {
+                    this._state.clear();
+                    this._controller.productors = productors;
+                    this._state.callbackState(this._controller.productors);
+                });
             }
         }
     }
@@ -481,7 +475,8 @@ class Pesquisador {
             }
 
             content.on('click', 'section .card-footer button', function() {
-                alert($(this).attr("id"));
+                let productor = _self._controller.getProduct($(this).attr("id"));
+                _self._controller.changedAddProduct(productor);
             });
 
             let onBindState = function() {

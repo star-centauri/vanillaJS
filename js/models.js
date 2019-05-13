@@ -3,9 +3,9 @@ import {refreshButton} from './components.js';
 export class MenuModel {
     ItemMenu(item) {
         return {
-            id: item.Id,
-            icon: item.Icon,
-            title: item.Name,
+            id: item.Cabecalho.Id,
+            icon: item.Cabecalho.Icon,
+            title: item.Cabecalho.Name,
             subItems: item.SubItems
         }
     }
