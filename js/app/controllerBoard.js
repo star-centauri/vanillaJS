@@ -2,8 +2,11 @@ import {ProxyFactory} from '../services.js';
 
 export class ControllerStorie {
     constructor() {
-        this._list = [];
         this._proxy = new ProxyFactory();
+
+        this._list = [];
+        this._listCart = [];
+        this._quantidadeProduct = 0;
         this._keys = {
             addProductorCard: "addProductorCard"
         }
@@ -25,6 +28,12 @@ export class ControllerStorie {
         this._proxy.register(this._keys.addProductorCard, callback);
     }
     changedAddProduct(product) {
+        this._listCart.push(product);
+        this._quantidadeProduct += 1;
         this._proxy.changed(this._keys.addProductorCard, product);
+    }
+
+    get ItHasProductors() {
+        return this._listCart.length > 0;
     }
 }

@@ -383,19 +383,29 @@ class Pesquisador {
                 return btn.getHtml();
             };
             let createOpenCart = function() {
-                return `<section id="section-cart">
-                            <header>
-                                <span class="${[m$.Font.flamingo, m$.Font.uppercase].join(' ')}"> Adicionados ao carrinho: </span> 
-                                ${i$.icon(m$.Icon.close)}
-                            </header>
-                            <article>
-                                <span class="default-ocorrencia"> Não há nenhum produto no carrinho. </span>
-                            </article>
-                            <footer></footer>
-                        </section>`;
+                let context = `<section id="section-cart">
+                                    <header>
+                                        <span class="${[m$.Font.flamingo, m$.Font.uppercase].join(' ')}"> Adicionados ao carrinho: </span> 
+                                        ${i$.icon(m$.Icon.close)}
+                                    </header>
+                                    <article id="content-cart">
+                                        <ul></ul>
+                                        ${_self._controller.ItHasProductors ? '' : '<span class="default-ocorrencia"> Não há nenhum produto no carrinho. </span>'}
+                                    </article>
+                                    <footer></footer>
+                                </section>`;
+
+                if(_self._controller.ItHasProductors) {
+                    let listItems = context.find("#content-cart ul");
+                    _self._controller._listCart.forEach(p => listItems.append(addProductCart(p)));
+                }
+
+                return context;
             };
 
             function addProductCart(product) {
+                context.find(".default-ocorrencia").remove();
+
                 console.log("Testando");
                 console.log(product);
             }
@@ -404,17 +414,15 @@ class Pesquisador {
             context.append(createOpenCart());
             context.find("#section-cart").hide();
 
-            context.on("click", "button", function() {
-                context.find("#section-cart").show();
-                $(this).hide();
-            });
-
-            context.on("click", "#section-cart .fa-times", function() {
-                context.find("#section-cart").hide();
-                context.find('button').show();
-            });
-
             let onBindState = function() {
+                context.on("click", "button", function() {
+                    context.find("#section-cart").show();
+                    $(this).hide();
+                });
+                context.on("click", "#section-cart .fa-times", function() {
+                    context.find("#section-cart").hide();
+                    context.find('button').show();
+                });
                 _self._controller.registerAddProduct(function(value){ addProductCart(value) });
             }();
             return context;
