@@ -404,10 +404,13 @@ class Pesquisador {
             };
 
             function addProductCart(product) {
-                context.find(".default-ocorrencia").remove();
+                let createItem = () => {
+                    let item = `<li id="${product.id}" class="item-cart"> <img src="${product.img}"> ${product.title} ${i$.icon(m$.Icon.close)}</li>`
+                    return item;
+                };
 
-                console.log("Testando");
-                console.log(product);
+                context.find(".default-ocorrencia").remove();
+                context.find('ul').append(createItem());
             }
 
             context.append(createButton());

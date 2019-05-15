@@ -60,3 +60,11 @@
 .mt-4 {
     margin-top: 20px;
 }
+.item-cart img{
+    width: 15%;
+    border-radius: 50% !important;
+}
+ul {
+    list-style: none;
+    padding: 0px;
+}
